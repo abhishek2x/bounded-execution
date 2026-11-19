@@ -1,15 +1,17 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "bounded-execution"
-version = "0.1.0.dev0"
+version = "0.1.0a1"
 description = "Bounded admission control for Python thread and process executors"
+license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -22,6 +24,12 @@ classifiers = [
     "Programming Language :: Python :: 3.15",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+
+[project.urls]
+Homepage = "https://github.com/abhishek2x/bounded-execution"
+Documentation = "https://github.com/abhishek2x/bounded-execution/tree/main/docs"
+Repository = "https://github.com/abhishek2x/bounded-execution"
+Issues = "https://github.com/abhishek2x/bounded-execution/issues"
 
 [project.optional-dependencies]
 dev = [

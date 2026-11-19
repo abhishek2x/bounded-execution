@@ -2,6 +2,8 @@
 
 **Bounded admission control for Python thread and process executors.**
 
+[View the package on PyPI](https://pypi.org/project/bounded-execution/).
+
 `bounded-execution` is a synchronous library that limits how many tasks
 can be submitted without completing. Python's native executors limit
 concurrent workers, but ordinary `submit()` calls can continue to queue
@@ -99,6 +101,8 @@ The initial release is an in-process execution library, not a distributed
 queue or workflow system. Async scheduling, automatic backend selection,
 retries, pipelines, rate limiting, and priority scheduling are outside
 the v0.1 scope.
+
+Distributed under the MIT License; see [LICENSE](LICENSE).
 
 ## Future scope
 
