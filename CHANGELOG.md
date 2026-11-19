@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix `bounded_execution.__version__` to match the package release version.
+
 ## 0.1.0a1 - 2026-11-19
 
 - Add synchronous bounded submission for thread and process backends.
