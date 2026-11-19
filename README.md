@@ -54,6 +54,8 @@ admission, not task execution speed.
 Process tasks and their arguments generally need to be picklable. Define
 process worker functions at module scope and protect process startup code
 with `if __name__ == "__main__":` where required by the platform.
+See [Core concepts and backend selection](docs/concepts.md) for more
+details.
 
 ## Development setup
 
@@ -77,6 +79,7 @@ See the runnable [thread example](examples/thread_example.py) and
 
 ```text
 .
+├── docs/                      # Concepts, contracts, benchmarking, and release guides
 ├── examples/                  # Runnable thread and process examples
 ├── benchmarks/                # Submission comparison benchmark
 ├── src/bounded_execution/     # Installable Python package
@@ -87,7 +90,8 @@ See the runnable [thread example](examples/thread_example.py) and
 ```
 
 Run `python benchmarks/bounded_submission.py --help` for benchmark
-options.
+options; see the [benchmarking guide](docs/benchmarking.md) for
+measurement details.
 
 ## Scope
 
@@ -110,3 +114,6 @@ Potential additions after the synchronous API is established include:
   across backends.
 
 These are possible directions, not features of the current release.
+
+See the [documentation index](docs/README.md) for the maintained topic
+guides.
