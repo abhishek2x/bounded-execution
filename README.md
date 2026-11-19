@@ -106,18 +106,30 @@ Distributed under the MIT License; see [LICENSE](LICENSE).
 
 ## Future scope
 
-Potential additions after the synchronous API is established include:
+The current API is synchronous and supports native thread and process
+executors. The following are candidate directions, **not implemented
+features or release commitments**:
 
-- A separate async API with event-loop-safe admission and lifecycle
-  handling.
-- An interpreter-pool backend when supported by the Python runtime
-  (Python 3.14+).
-- Opt-in retries with bounded scheduling, backoff, and clear guidance on
-  idempotency.
-- Multi-stage task pipelines and an optional global capacity budget
-  across backends.
-
-These are possible directions, not features of the current release.
+1. **Process worker controls:** expose native worker recycling and
+   initialization options, such as `max_tasks_per_child`, `initializer`,
+   and `initargs`, without adding custom process management.
+2. **Async API:** add a separate async-facing API with non-blocking
+   admission, explicit lifecycle management, and event-loop-safe
+   behavior. Keep the synchronous API independent; do not make it create
+   a hidden event loop.
+3. **Async process execution:** optionally run coroutines in worker
+   processes. This depends on the async API and should proceed only if
+   there is a demonstrated use case.
+4. **Interpreter backend:** add support for
+   `InterpreterPoolExecutor` on Python 3.14 and newer, while keeping it
+   unavailable on older Python versions. This can be developed
+   independently of the async API.
+5. **Opt-in retries:** consider bounded retry scheduling, backoff, and
+   clear idempotency requirements only after task lifecycle and shutdown
+   behavior are stable.
+6. **Advanced scheduling and composition:** consider scheduling
+   policies, multi-stage pipelines, or a shared capacity budget only
+   when concrete use cases justify their API and implementation cost.
 
 See the [documentation index](docs/README.md) for the maintained topic
 guides.
