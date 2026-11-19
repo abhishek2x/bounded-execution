@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.1.0a2 - 2026-11-19
+
+- Clarify planned extensions and release boundaries in the README.
 - Fix `bounded_execution.__version__` to match the package release version.
 
 ## 0.1.0a1 - 2026-11-19
