@@ -83,3 +83,22 @@ build, check, and upload the new artifacts with the same commands.
 After the alpha period, use `0.1.0` for the first stable release. Tag
 each release and create a GitHub release pointing to the changelog after
 its upload succeeds.
+
+## GitHub Actions
+
+`ci.yml` runs Ruff, formatting checks, mypy, and pytest on pushes to
+`main` and pull requests. `publish.yml` builds and checks distributions
+when a `v*` tag is pushed, then publishes them using PyPI Trusted
+Publishing.
+
+Before using `publish.yml`, configure a Trusted Publisher in the PyPI
+project settings:
+
+- Owner: `abhishek2x`
+- Repository: `bounded-execution`
+- Workflow: `publish.yml`
+- GitHub environment: `pypi`
+
+The `v0.1.0a1` tag was created before this workflow was added and does
+not trigger a publish run. Use a new version and matching tag, such as
+`0.1.0a2` and `v0.1.0a2`, for the next automated release.
