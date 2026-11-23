@@ -56,6 +56,10 @@ admission, not task execution speed.
 Process tasks and their arguments generally need to be picklable. Define
 process worker functions at module scope and protect process startup code
 with `if __name__ == "__main__":` where required by the platform.
+`process_config` can also pass an `initializer` and `initargs` to each
+worker. On Python 3.11 and newer, `max_tasks_per_child` can recycle
+workers after a configured number of tasks; worker replacement adds
+startup overhead and follows the native process-pool start-method rules.
 See [Core concepts and backend selection](docs/concepts.md) for more
 details.
 
@@ -110,24 +114,21 @@ The current API is synchronous and supports native thread and process
 executors. The following are candidate directions, **not implemented
 features or release commitments**:
 
-1. **Process worker controls:** expose native worker recycling and
-   initialization options, such as `max_tasks_per_child`, `initializer`,
-   and `initargs`, without adding custom process management.
-2. **Async API:** add a separate async-facing API with non-blocking
+1. **Async API:** add a separate async-facing API with non-blocking
    admission, explicit lifecycle management, and event-loop-safe
    behavior. Keep the synchronous API independent; do not make it create
    a hidden event loop.
-3. **Async process execution:** optionally run coroutines in worker
+2. **Async process execution:** optionally run coroutines in worker
    processes. This depends on the async API and should proceed only if
    there is a demonstrated use case.
-4. **Interpreter backend:** add support for
+3. **Interpreter backend:** add support for
    `InterpreterPoolExecutor` on Python 3.14 and newer, while keeping it
    unavailable on older Python versions. This can be developed
    independently of the async API.
-5. **Opt-in retries:** consider bounded retry scheduling, backoff, and
+4. **Opt-in retries:** consider bounded retry scheduling, backoff, and
    clear idempotency requirements only after task lifecycle and shutdown
    behavior are stable.
-6. **Advanced scheduling and composition:** consider scheduling
+5. **Advanced scheduling and composition:** consider scheduling
    policies, multi-stage pipelines, or a shared capacity budget only
    when concrete use cases justify their API and implementation cost.
 

@@ -70,6 +70,14 @@ arguments generally need to be picklable. Prefer module-level worker
 functions, and use the `if __name__ == "__main__":` guard for portable
 program startup where required by the platform.
 
+`process_config` can pass an `initializer` and tuple `initargs`; the
+initializer runs once for each worker process, including replacements.
+On Python 3.11+, `max_tasks_per_child` asks the native executor to replace
+a worker after it has processed the configured number of tasks. This
+option selects spawn semantics, which adds worker startup overhead and
+requires the usual safe process-startup guard. It is not available on
+Python 3.9 or 3.10.
+
 Cancelling a Future does not forcibly stop work that is already running.
 See [the public contract](contracts.md) for cancellation and shutdown
 details.

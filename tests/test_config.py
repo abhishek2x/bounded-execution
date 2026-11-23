@@ -1,6 +1,13 @@
+import sys
+
 import pytest
 
 from bounded_execution import ExecutionEngine, InvalidConfigurationError
+from bounded_execution.config import validate_backend_config
+
+
+def _initializer() -> None:
+    pass
 
 
 @pytest.mark.parametrize(
@@ -31,3 +38,80 @@ def test_at_least_one_backend_must_be_configured() -> None:
 def test_non_mapping_configuration_is_rejected() -> None:
     with pytest.raises(InvalidConfigurationError):
         ExecutionEngine(thread_config=1)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("option", "value"),
+    [
+        ("initializer", "not callable"),
+        ("initargs", ["not", "a", "tuple"]),
+        ("max_tasks_per_child", 0),
+        ("max_tasks_per_child", -1),
+        ("max_tasks_per_child", True),
+    ],
+)
+def test_invalid_process_options_are_rejected(
+    option: str,
+    value: object,
+) -> None:
+    config: dict[str, object] = {
+        "max_workers": 1,
+        "max_in_flight": 1,
+        option: value,
+    }
+
+    with pytest.raises(InvalidConfigurationError):
+        ExecutionEngine(process_config=config)
+
+
+def test_process_only_options_are_rejected_for_threads() -> None:
+    with pytest.raises(InvalidConfigurationError, match="unknown keys: initializer"):
+        ExecutionEngine(
+            thread_config={
+                "max_workers": 1,
+                "max_in_flight": 1,
+                "initializer": _initializer,
+            }
+        )
+
+
+def test_unknown_process_option_is_rejected() -> None:
+    with pytest.raises(InvalidConfigurationError, match="unknown keys: extra"):
+        ExecutionEngine(
+            process_config={
+                "max_workers": 1,
+                "max_in_flight": 1,
+                "extra": True,
+            }
+        )
+
+
+def test_process_options_are_returned_with_validated_configuration() -> None:
+    config = {
+        "max_workers": 2,
+        "max_in_flight": 4,
+        "initializer": _initializer,
+        "initargs": ("worker",),
+        "max_tasks_per_child": None,
+    }
+
+    validated = validate_backend_config("process", config)
+
+    assert validated is not None
+    assert validated.max_workers == 2
+    assert validated.max_in_flight == 4
+    assert validated.initializer is _initializer
+    assert validated.initargs == ("worker",)
+    assert validated.max_tasks_per_child is None
+
+
+@pytest.mark.skipif(sys.version_info >= (3, 11), reason="supported in Python 3.11+")
+def test_worker_recycling_is_rejected_before_python_311() -> None:
+    with pytest.raises(InvalidConfigurationError, match="requires Python 3.11"):
+        ExecutionEngine(
+            process_config={
+                "max_workers": 1,
+                "max_in_flight": 1,
+                "max_tasks_per_child": 1,
+            }
+        )

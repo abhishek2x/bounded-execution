@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from concurrent.futures import Future, ProcessPoolExecutor
 from threading import Condition
-from typing import Any, TypeVar
+from typing import Any, Optional, TypeVar
 
 from bounded_execution.admission import AdmissionController
 
@@ -20,8 +20,20 @@ class ProcessBackend:
         *,
         condition: Condition,
         is_open: Callable[[], bool],
+        initializer: Optional[Callable[..., Any]] = None,
+        initargs: tuple[object, ...] = (),
+        max_tasks_per_child: Optional[int] = None, # Optional; defaults to no recycling and is only needed in specific
     ) -> None:
-        self._executor = ProcessPoolExecutor(max_workers=max_workers)
+        executor_options: dict[str, Any] = {
+            "initializer": initializer,
+            "initargs": initargs,
+        }
+        if max_tasks_per_child is not None:
+            executor_options["max_tasks_per_child"] = max_tasks_per_child
+        self._executor = ProcessPoolExecutor(
+            max_workers=max_workers,
+            **executor_options,
+        )
         self._admission = AdmissionController(max_in_flight, condition, is_open)
 
     def submit(

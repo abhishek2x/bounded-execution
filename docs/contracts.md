@@ -7,7 +7,7 @@ The package supports Python 3.9 and newer.
 ## Engine configuration
 
 Construct `ExecutionEngine` with `thread_config`, `process_config`, or
-both. Each configured backend mapping contains exactly these keys:
+both. Each configured mapping requires these keys:
 
 | Key | Requirement | Meaning |
 | --- | --- | --- |
@@ -17,6 +17,22 @@ both. Each configured backend mapping contains exactly these keys:
 At least one backend must be configured. A backend without a
 configuration is unavailable on that engine. There are no implicit
 worker-count defaults. Unknown keys and invalid values are configuration errors. Booleans are not accepted as integer limits.
+
+`process_config` additionally accepts these optional native process-pool
+settings:
+
+| Key | Requirement | Meaning |
+| --- | --- | --- |
+| `initializer` | Callable or `None` | Called once when each worker starts, including replacement workers |
+| `initargs` | Tuple; defaults to `()` | Arguments passed to `initializer` |
+| `max_tasks_per_child` | Positive integer or `None`; defaults to `None` | Recycle a worker after it has processed this many tasks; requires Python 3.11+ |
+
+Worker initialization functions and their arguments must meet the native
+process pool's pickling requirements. When worker recycling is enabled,
+Python uses spawn semantics, which can increase startup overhead and
+requires the usual safe process-startup guard. The option is unavailable
+on Python 3.9 and 3.10; setting a non-`None` value there raises
+`InvalidConfigurationError`.
 
 Each backend has an independent in-flight limit; v0.1 does not impose a
 combined global limit.

@@ -55,15 +55,20 @@ class ExecutionEngine:
 
         if thread_limits is not None:
             self._backends["thread"] = ThreadBackend(
-                *thread_limits,
+                thread_limits.max_workers,
+                thread_limits.max_in_flight,
                 condition=self._condition,
                 is_open=self._is_open,
             )
         if process_limits is not None:
             self._backends["process"] = ProcessBackend(
-                *process_limits,
+                process_limits.max_workers,
+                process_limits.max_in_flight,
                 condition=self._condition,
                 is_open=self._is_open,
+                initializer=process_limits.initializer,
+                initargs=process_limits.initargs,
+                max_tasks_per_child=process_limits.max_tasks_per_child,
             )
 
     def submit(
