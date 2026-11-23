@@ -22,7 +22,9 @@ class ProcessBackend:
         is_open: Callable[[], bool],
         initializer: Optional[Callable[..., Any]] = None,
         initargs: tuple[object, ...] = (),
-        max_tasks_per_child: Optional[int] = None, # Optional; defaults to no recycling and is only needed in specific
+        # Optional; defaults to no recycling and is only needed in specific
+        # cases such as isolating state or resource leaks between worker lifetimes.
+        max_tasks_per_child: Optional[int] = None,
     ) -> None:
         executor_options: dict[str, Any] = {
             "initializer": initializer,
