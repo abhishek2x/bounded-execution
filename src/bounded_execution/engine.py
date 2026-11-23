@@ -11,7 +11,7 @@ from typing import Any, Optional, TypeVar, Union
 
 from bounded_execution.backends.process import ProcessBackend
 from bounded_execution.backends.thread import ThreadBackend
-from bounded_execution.config import validate_backend_config
+from bounded_execution.config import validate_process_config, validate_thread_config
 from bounded_execution.exceptions import (
     EngineClosedError,
     InvalidConfigurationError,
@@ -41,8 +41,8 @@ class ExecutionEngine:
         thread_config: Optional[Mapping[str, object]] = None,
         process_config: Optional[Mapping[str, object]] = None,
     ) -> None:
-        thread_limits = validate_backend_config("thread", thread_config)
-        process_limits = validate_backend_config("process", process_config)
+        thread_limits = validate_thread_config(thread_config)
+        process_limits = validate_process_config(process_config)
         if thread_limits is None and process_limits is None:
             raise InvalidConfigurationError(
                 "Configure at least one of thread_config or process_config."

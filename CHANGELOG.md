@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.0a4 - 2026-11-24
 
+- Add an async-facing execution engine for native coroutines and synchronous offloading.
 - Add process worker initialization and optional worker recycling.
+- Add a standalone async example covering coroutine, thread, and process backends.
 
 ## 0.1.0a2 - 2026-11-19
 

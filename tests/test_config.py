@@ -3,7 +3,7 @@ import sys
 import pytest
 
 from bounded_execution import ExecutionEngine, InvalidConfigurationError
-from bounded_execution.config import validate_backend_config
+from bounded_execution.config import validate_process_config
 
 
 def _initializer() -> None:
@@ -95,7 +95,7 @@ def test_process_options_are_returned_with_validated_configuration() -> None:
         "max_tasks_per_child": None,
     }
 
-    validated = validate_backend_config("process", config)
+    validated = validate_process_config(config)
 
     assert validated is not None
     assert validated.max_workers == 2

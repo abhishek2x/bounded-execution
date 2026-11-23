@@ -1,15 +1,15 @@
 # bounded-execution
 
-**Bounded admission control for Python thread and process executors.**
+**Bounded admission control for Python async, thread, and process execution.**
 
 [View the package on PyPI](https://pypi.org/project/bounded-execution/).
 
-`bounded-execution` is a synchronous library that limits how many tasks
-can be submitted without completing. Python's native executors limit
-concurrent workers, but ordinary `submit()` calls can continue to queue
-work. This library adds per-backend in-flight limits and producer
-backpressure while leaving execution and `Future` behavior to
-`concurrent.futures`.
+`bounded-execution` provides separate synchronous and async APIs that
+limit how many tasks can be submitted without completing. Python's
+native executors limit concurrent workers, but ordinary `submit()` calls
+can continue to queue work. The library adds in-flight limits and
+producer backpressure while delegating execution to native executors and
+asyncio.
 
 ## The two limits
 
@@ -46,6 +46,38 @@ variant.
 Each backend has an independent in-flight limit. The limit controls
 admission, not task execution speed.
 
+### Async usage
+
+Use `AsyncExecutionEngine` when the caller is running inside an asyncio
+event loop:
+
+```python
+import asyncio
+from bounded_execution import AsyncExecutionEngine
+
+async def fetch_item(item_id: int) -> str:
+    await asyncio.sleep(0.1)
+    return f"item-{item_id}"
+
+async def main() -> None:
+    async with AsyncExecutionEngine(
+        async_config={"max_in_flight": 3}
+    ) as engine:
+        futures = [
+            await engine.submit(fetch_item, item_id, backend="async")
+            for item_id in range(5)
+        ]
+        for future in futures:
+            print(await future)
+
+asyncio.run(main())
+```
+
+`backend="async"` executes native coroutine functions on the event loop.
+Use `backend="thread"` or `backend="process"` to offload synchronous
+functions without blocking the event loop. Async capacity is configured
+with `async_config={"max_in_flight": ...}`.
+
 ## Choosing a backend
 
 - Use **threads** for blocking I/O and work that spends substantial time
@@ -78,15 +110,16 @@ mypy src tests examples benchmarks
 pytest
 ```
 
-See the runnable [thread example](examples/thread_example.py) and
-[process example](examples/process_example.py) for standalone examples.
+See the runnable [thread example](examples/thread_example.py),
+[process example](examples/process_example.py), and
+[async example](examples/async_example.py) for standalone examples.
 
 ## Project layout
 
 ```text
 .
 ├── docs/                      # Concepts, contracts, benchmarking, and release guides
-├── examples/                  # Runnable thread and process examples
+├── examples/                  # Runnable async, thread, and process examples
 ├── benchmarks/                # Submission comparison benchmark
 ├── src/bounded_execution/     # Installable Python package
 ├── tests/                     # Configuration, backend, and API tests
@@ -110,27 +143,26 @@ Distributed under the MIT License; see [LICENSE](LICENSE).
 
 ## Future scope
 
-The current API is synchronous and supports native thread and process
-executors. The following are candidate directions, **not implemented
-features or release commitments**:
+The following are candidate directions, **not implemented features or
+release commitments**:
 
-1. **Async API:** add a separate async-facing API with non-blocking
-   admission, explicit lifecycle management, and event-loop-safe
-   behavior. Keep the synchronous API independent; do not make it create
-   a hidden event loop.
-2. **Async process execution:** optionally run coroutines in worker
+1. **Async process execution:** optionally run coroutines in worker
    processes. This depends on the async API and should proceed only if
    there is a demonstrated use case.
-3. **Interpreter backend:** add support for
+2. **Interpreter backend:** add support for
    `InterpreterPoolExecutor` on Python 3.14 and newer, while keeping it
    unavailable on older Python versions. This can be developed
    independently of the async API.
-4. **Opt-in retries:** consider bounded retry scheduling, backoff, and
+3. **Opt-in retries:** consider bounded retry scheduling, backoff, and
    clear idempotency requirements only after task lifecycle and shutdown
    behavior are stable.
-5. **Advanced scheduling and composition:** consider scheduling
-   policies, multi-stage pipelines, or a shared capacity budget only
-   when concrete use cases justify their API and implementation cost.
+4. **Hybrid compute-and-persist pipeline:** consider an explicit
+   two-stage pipeline that computes in the process backend and persists
+   in the thread or async backend, with separate capacity limits and
+   bounded handoff between stages.
+5. **Advanced scheduling and composition:** consider scheduling policies
+   or a shared capacity budget only when concrete use cases justify
+   their API and implementation cost.
 
 See the [documentation index](docs/README.md) for the maintained topic
 guides.

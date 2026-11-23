@@ -20,7 +20,8 @@ checked, and uploaded.
 | ------------ | ---------------------- | -------- |
 | `0.1.0.dev0` | Development snapshot   | TestPyPI |
 | `0.1.0a1`    | First public alpha     | PyPI     |
-| `0.1.0a2`    | Subsequent alpha fixes | PyPI     |
+| `0.1.0a2`    | Alpha fixes            | PyPI     |
+| `0.1.0a4`    | Async API and process lifecycle controls | PyPI |
 | `0.1.0`      | First stable release   | PyPI     |
 
 ## Build and verify locally
@@ -76,8 +77,8 @@ python -m twine upload --repository pypi "$release_dir"/*
 ```
 
 Use a PyPI API token or configure Trusted Publishing. Uploaded release
-files cannot be replaced. To publish an update, change the version first
-(for example, from `0.1.0a1` to `0.1.0a2`), update the changelog, then
+files cannot be replaced. To publish an update, change the version first,
+update the changelog, then
 build, check, and upload the new artifacts with the same commands.
 
 After the alpha period, use `0.1.0` for the first stable release. Tag
@@ -100,5 +101,5 @@ project settings:
 - GitHub environment: `pypi`
 
 The `v0.1.0a1` tag was created before this workflow was added and does
-not trigger a publish run. Use a new version and matching tag, such as
-`0.1.0a2` and `v0.1.0a2`, for the next automated release.
+not trigger a publish run. For each automated release, push a new version
+and matching tag (for example, `0.1.0a4` and `v0.1.0a4`).

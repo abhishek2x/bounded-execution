@@ -86,6 +86,24 @@ threads or processes.
 The engine is ready for use after construction; entering its context
 does not create additional resources.
 
+## Async contract
+
+`AsyncExecutionEngine` is a separate API for callers running an asyncio
+event loop. It may be constructed with `async_config`, `thread_config`,
+and/or `process_config`; at least one backend must be configured.
+
+- `async_config` contains exactly `max_in_flight`, a positive integer.
+- `submit()` is asynchronous. It waits for capacity, then returns an
+  `asyncio.Future`/Task.
+- `backend="async"` accepts a native coroutine function and executes it
+  on the caller's event loop.
+- `backend="thread"` or `"process"` accepts a synchronous function and
+  offloads it to the corresponding native executor.
+- Async submission, cancellation, and shutdown are confined to one event
+  loop. Use the engine on the loop that creates or enters it.
+- `shutdown(wait=True, cancel_futures=False)` closes admission and waits
+  for accepted work; `wait=False` returns without waiting.
+
 ## Error boundaries
 
 The public exception names are `ExecutionEngineError` (base),

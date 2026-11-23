@@ -86,5 +86,9 @@ details.
 
 This project wraps Python's native executors; it does not implement its
 own thread pool, process pool, or Future. Distributed dispatch,
-automatic workload detection, asynchronous scheduling, retries, and
-workflow orchestration are not part of v0.1.
+automatic workload detection, async execution inside worker processes,
+retries, and workflow orchestration are not part of v0.1.
+
+`AsyncExecutionEngine` is a separate API for native coroutines and
+synchronous offloading. It must not block the event-loop thread and
+uses asynchronous capacity waiting.

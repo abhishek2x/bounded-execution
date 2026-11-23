@@ -8,8 +8,9 @@ an operational recommendation.
   in-flight work, backpressure, Conditions, and thread/process trade-offs.
 - [Public contract](contracts.md) — configuration, submission,
   cancellation, and shutdown semantics agreed for v0.1.
-- [Thread example](../examples/thread_example.py) and
-  [process example](../examples/process_example.py) — runnable usage.
+- [Thread example](../examples/thread_example.py),
+  [process example](../examples/process_example.py), and
+  [async example](../examples/async_example.py) — runnable usage.
 - [Benchmarking](benchmarking.md) — compare unbounded, semaphore-bounded,
   and library submission.
 - [Benchmark results](benchmark-results.md) — a local measurement snapshot

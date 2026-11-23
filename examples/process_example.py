@@ -1,6 +1,7 @@
 """Submit CPU-bound tasks through the bounded process backend."""
 
 import sys
+from concurrent.futures import Future
 
 from bounded_execution import ExecutionEngine
 
@@ -33,7 +34,7 @@ def main() -> None:
 
     with ExecutionEngine(process_config=process_config) as engine:
         print("Submitting 4 CPU-bound tasks with at most 4 in flight...")
-        futures = [
+        futures: list[Future[int]] = [
             engine.submit(sum_squares, stop, backend="process")
             for stop in (100_000, 200_000, 300_000, 400_000)
         ]
