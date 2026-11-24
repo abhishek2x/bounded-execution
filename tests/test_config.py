@@ -2,8 +2,15 @@ import sys
 
 import pytest
 
-from bounded_execution import ExecutionEngine, InvalidConfigurationError
-from bounded_execution.config import validate_process_config
+from bounded_execution import (
+    AsyncProcessExecutionEngine,
+    ExecutionEngine,
+    InvalidConfigurationError,
+)
+from bounded_execution.config import (
+    validate_async_process_config,
+    validate_process_config,
+)
 
 
 def _initializer() -> None:
@@ -115,3 +122,62 @@ def test_worker_recycling_is_rejected_before_python_311() -> None:
                 "max_tasks_per_child": 1,
             }
         )
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        {},
+        {"max_workers": 0, "child_concurrency": 1, "max_in_flight": 1},
+        {"max_workers": 1, "child_concurrency": True, "max_in_flight": 1},
+        {"max_workers": 1, "child_concurrency": 1, "max_in_flight": 0},
+        {"max_workers": 2, "child_concurrency": 1, "max_in_flight": 1},
+        {
+            "max_workers": 1,
+            "child_concurrency": 1,
+            "max_in_flight": 1,
+            "max_worker_restarts": -1,
+        },
+        {
+            "max_workers": 1,
+            "child_concurrency": 1,
+            "max_in_flight": 1,
+            "loop_initargs": [],
+        },
+        {
+            "max_workers": 1,
+            "child_concurrency": 1,
+            "max_in_flight": 1,
+            "unexpected": True,
+        },
+    ],
+)
+def test_invalid_async_process_configuration_is_rejected(
+    config: dict[str, object],
+) -> None:
+    with pytest.raises(InvalidConfigurationError):
+        AsyncProcessExecutionEngine(process_config=config)
+
+
+def test_async_process_configuration_is_validated() -> None:
+    config = {
+        "max_workers": 2,
+        "child_concurrency": 3,
+        "max_in_flight": 8,
+        "initializer": _initializer,
+        "initargs": ("process",),
+        "loop_initializer": _initializer,
+        "loop_initargs": ("event loop",),
+        "max_worker_restarts": 1,
+    }
+
+    validated = validate_async_process_config(config)
+
+    assert validated.max_workers == 2
+    assert validated.child_concurrency == 3
+    assert validated.max_in_flight == 8
+    assert validated.initializer is _initializer
+    assert validated.initargs == ("process",)
+    assert validated.loop_initializer is _initializer
+    assert validated.loop_initargs == ("event loop",)
+    assert validated.max_worker_restarts == 1

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add a separate async process engine with per-worker coroutine concurrency,
+  bounded admission, cooperative cancellation, and worker replacement.
+- Add an async process example and document its I/O-bound use cases,
+  serialization requirements, and worker lifecycle.
+
 ## 0.1.0a4 - 2026-11-24
 
 - Add an async-facing execution engine for native coroutines and synchronous offloading.

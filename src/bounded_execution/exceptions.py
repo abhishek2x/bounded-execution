@@ -15,3 +15,11 @@ class EngineClosedError(ExecutionEngineError):
 
 class InvalidConfigurationError(ExecutionEngineError, ValueError):
     """Raised when engine or backend configuration is invalid."""
+
+
+class RemoteExecutionError(ExecutionEngineError):
+    """Raised when a remote task result or exception cannot be transferred."""
+
+
+class WorkerProcessError(ExecutionEngineError):
+    """Raised when an asynchronous process worker exits unexpectedly."""

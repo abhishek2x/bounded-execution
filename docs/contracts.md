@@ -104,13 +104,48 @@ and/or `process_config`; at least one backend must be configured.
 - `shutdown(wait=True, cancel_futures=False)` closes admission and waits
   for accepted work; `wait=False` returns without waiting.
 
+`AsyncProcessExecutionEngine` is a separate API for native coroutine
+functions that must run in worker processes. Construct it with
+`process_config` containing `max_workers`, `child_concurrency`, and
+`max_in_flight`; `max_in_flight` must be at least `max_workers`.
+`child_concurrency` is the maximum number of active coroutines per child,
+and `max_in_flight` is the engine-wide bound on queued and running tasks.
+
+- `submit()` is asynchronous, accepts only coroutine functions, and
+  returns an `asyncio.Future`.
+- Functions, arguments, and successful results must be picklable.
+  Picklable task exceptions retain their original type. Untransferable
+  results or exceptions raise `RemoteExecutionError`.
+- Optional `initializer` / `initargs` run once per process. Optional
+  `loop_initializer` / `loop_initargs` run once after that process's event
+  loop starts; the loop is passed as the initializer's first argument.
+  Initializers and their arguments must be picklable. The process
+  initializer must be synchronous; the loop initializer may be
+  synchronous or asynchronous.
+- `max_worker_restarts` is a non-negative integer, defaulting to `3`.
+  Unexpected worker exits fail tasks assigned to that worker with
+  `WorkerProcessError`; those tasks are not replayed. A replacement worker
+  is started while the restart limit permits. After the limit is reached,
+  the engine rejects further submissions with `WorkerProcessError`.
+- Cancelling a returned Future requests cancellation of its remote
+  coroutine. Cancellation is cooperative and cannot stop synchronous or
+  CPU-bound code blocking the child event loop.
+- `shutdown(wait=True, cancel_futures=False)` closes admission and waits
+  for accepted work. With `wait=False`, accepted work continues while
+  workers shut down in the background. `cancel_futures=True` requests
+  cancellation of accepted coroutines.
+- Async process workers use Python's `spawn` start method. Use the usual
+  `if __name__ == "__main__":` guard in executable scripts.
+
 ## Error boundaries
 
 The public exception names are `ExecutionEngineError` (base),
 `UnsupportedBackendError` (unknown or unconfigured backend),
 `EngineClosedError` (submission after shutdown starts, including an
 awakened waiting submitter), and `InvalidConfigurationError` (also a
-`ValueError`). Exceptions raised by submitted functions are not wrapped;
-they remain available from the Future. Native executor errors, including
+`ValueError`). `RemoteExecutionError` reports result-transfer failures,
+and `WorkerProcessError` reports unexpected async worker exits. Exceptions
+raised by regular submitted functions are not wrapped; they remain
+available from the Future. Native executor errors, including synchronous
 process serialization failures, are surfaced rather than converted into
 successful-looking fallback results.

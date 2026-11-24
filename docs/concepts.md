@@ -82,12 +82,30 @@ Cancelling a Future does not forcibly stop work that is already running.
 See [the public contract](contracts.md) for cancellation and shutdown
 details.
 
+### Async process workers
+
+`AsyncProcessExecutionEngine` is for native coroutine workloads that need
+multiple process-hosted event loops. `max_workers` controls the number of
+processes, `child_concurrency` caps concurrently running coroutines in
+each process, and `max_in_flight` bounds accepted work across the engine.
+The product `max_workers * child_concurrency` is the maximum concurrent
+coroutine count; the admission limit may be lower, but cannot be lower
+than `max_workers`.
+
+This is best suited to I/O-bound coroutines when process isolation or
+independent event loops are useful. A coroutine that performs CPU-heavy
+synchronous work blocks its process's event loop and starves other
+coroutines there. Use the synchronous process backend for pure-Python
+CPU-bound functions. Submitted coroutine functions, arguments, and
+results must be picklable.
+
 ## Scope boundaries
 
-This project wraps Python's native executors; it does not implement its
-own thread pool, process pool, or Future. Distributed dispatch,
-automatic workload detection, async execution inside worker processes,
-retries, and workflow orchestration are not part of v0.1.
+The synchronous engine wraps Python's native executors. The async process
+engine owns its process workers because each process must keep an event
+loop alive across multiple coroutine tasks. Distributed dispatch,
+automatic workload detection, retries, and workflow orchestration are
+not part of v0.1.
 
 `AsyncExecutionEngine` is a separate API for native coroutines and
 synchronous offloading. It must not block the event-loop thread and

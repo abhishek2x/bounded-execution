@@ -10,7 +10,9 @@ an operational recommendation.
   cancellation, and shutdown semantics agreed for v0.1.
 - [Thread example](../examples/thread_example.py),
   [process example](../examples/process_example.py), and
-  [async example](../examples/async_example.py) — runnable usage.
+  [async example](../examples/async_example.py) and
+  [async process example](../examples/async_process_example.py) — runnable
+  usage.
 - [Benchmarking](benchmarking.md) — compare unbounded, semaphore-bounded,
   and library submission.
 - [Benchmark results](benchmark-results.md) — a local measurement snapshot

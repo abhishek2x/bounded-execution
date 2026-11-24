@@ -9,7 +9,7 @@ limit how many tasks can be submitted without completing. Python's
 native executors limit concurrent workers, but ordinary `submit()` calls
 can continue to queue work. The library adds in-flight limits and
 producer backpressure while delegating execution to native executors and
-asyncio.
+the caller's event loop or process-hosted event loops.
 
 ## The two limits
 
@@ -78,6 +78,44 @@ Use `backend="thread"` or `backend="process"` to offload synchronous
 functions without blocking the event loop. Async capacity is configured
 with `async_config={"max_in_flight": ...}`.
 
+### Async process usage
+
+`AsyncProcessExecutionEngine` runs native coroutine functions in separate
+processes, each with its own event loop. This is useful for I/O-bound
+coroutines that need process isolation or independent event loops:
+
+```python
+import asyncio
+from bounded_execution import AsyncProcessExecutionEngine
+
+async def fetch_item(item_id: int) -> str:
+    await asyncio.sleep(0.1)
+    return f"item-{item_id}"
+
+async def main() -> None:
+    async with AsyncProcessExecutionEngine(
+        process_config={
+            "max_workers": 2,
+            "child_concurrency": 4,
+            "max_in_flight": 8,
+        }
+    ) as engine:
+        futures = [
+            await engine.submit(fetch_item, item_id)
+            for item_id in range(8)
+        ]
+        print(await asyncio.gather(*futures))
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+Coroutine functions, arguments, and results must be picklable. Pure
+Python CPU-bound work should use the synchronous process backend instead;
+CPU-intensive code inside a coroutine blocks that worker's event loop.
+Workers use the `spawn` start method, so keep worker functions at module
+scope and guard program startup with `if __name__ == "__main__":`.
+
 ## Choosing a backend
 
 - Use **threads** for blocking I/O and work that spends substantial time
@@ -111,8 +149,9 @@ pytest
 ```
 
 See the runnable [thread example](examples/thread_example.py),
-[process example](examples/process_example.py), and
-[async example](examples/async_example.py) for standalone examples.
+[process example](examples/process_example.py), [async example](examples/async_example.py),
+and [async process example](examples/async_process_example.py) for
+standalone examples.
 
 ## Project layout
 
@@ -134,35 +173,16 @@ measurement details.
 
 ## Scope
 
-The initial release is an in-process execution library, not a distributed
-queue or workflow system. Async scheduling, automatic backend selection,
-retries, pipelines, rate limiting, and priority scheduling are outside
-the v0.1 scope.
+The library provides local task execution; it is not a distributed
+task queue or workflow engine. Automatic backend selection, retries,
+rate limiting, and priority scheduling are not included in the current
+release.
 
 Distributed under the MIT License; see [LICENSE](LICENSE).
 
-## Future scope
+## Roadmap
 
-The following are candidate directions, **not implemented features or
-release commitments**:
-
-1. **Async process execution:** optionally run coroutines in worker
-   processes. This depends on the async API and should proceed only if
-   there is a demonstrated use case.
-2. **Interpreter backend:** add support for
-   `InterpreterPoolExecutor` on Python 3.14 and newer, while keeping it
-   unavailable on older Python versions. This can be developed
-   independently of the async API.
-3. **Opt-in retries:** consider bounded retry scheduling, backoff, and
-   clear idempotency requirements only after task lifecycle and shutdown
-   behavior are stable.
-4. **Hybrid compute-and-persist pipeline:** consider an explicit
-   two-stage pipeline that computes in the process backend and persists
-   in the thread or async backend, with separate capacity limits and
-   bounded handoff between stages.
-5. **Advanced scheduling and composition:** consider scheduling policies
-   or a shared capacity budget only when concrete use cases justify
-   their API and implementation cost.
-
-See the [documentation index](docs/README.md) for the maintained topic
-guides.
+Proposed enhancements are tracked in the
+[GitHub issues](https://github.com/abhishek2x/bounded-execution/issues).
+They are not implemented features or release commitments. For topic
+guides, see the [documentation index](docs/README.md).

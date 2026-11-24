@@ -1,5 +1,6 @@
 """Configuration models and validation for execution backends."""
 
+import inspect
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -10,6 +11,16 @@ from bounded_execution.exceptions import InvalidConfigurationError
 _EXECUTOR_KEYS = frozenset({"max_workers", "max_in_flight"})
 _PROCESS_OPTIONS = frozenset({"initializer", "initargs", "max_tasks_per_child"})
 _ASYNC_KEYS = frozenset({"max_in_flight"})
+_ASYNC_PROCESS_KEYS = frozenset({"max_workers", "child_concurrency", "max_in_flight"})
+_ASYNC_PROCESS_OPTIONS = frozenset(
+    {
+        "initializer",
+        "initargs",
+        "loop_initializer",
+        "loop_initargs",
+        "max_worker_restarts",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -27,6 +38,18 @@ class _ProcessConfig(_ExecutorConfig):
     initializer: Optional[Callable[..., Any]] = None
     initargs: tuple[object, ...] = ()
     max_tasks_per_child: Optional[int] = None
+
+
+@dataclass(frozen=True)
+class _AsyncProcessConfig:
+    max_workers: int
+    child_concurrency: int
+    max_in_flight: int
+    initializer: Optional[Callable[..., Any]]
+    initargs: tuple[object, ...]
+    loop_initializer: Optional[Callable[..., Any]]
+    loop_initargs: tuple[object, ...]
+    max_worker_restarts: int
 
 
 def _validate_mapping(
@@ -138,4 +161,79 @@ def validate_process_config(
         initializer=initializer,
         initargs=initargs,
         max_tasks_per_child=max_tasks_per_child,
+    )
+
+
+def validate_async_process_config(
+    config: Mapping[str, object],
+) -> _AsyncProcessConfig:
+    """Validate process and per-process coroutine concurrency settings."""
+    values = _validate_mapping(
+        "async_process",
+        config,
+        _ASYNC_PROCESS_KEYS,
+        _ASYNC_PROCESS_OPTIONS,
+    )
+    if values is None:
+        raise InvalidConfigurationError("async_process_config must be a mapping.")
+
+    max_workers = _positive_int("async_process", "max_workers", values["max_workers"])
+    child_concurrency = _positive_int(
+        "async_process", "child_concurrency", values["child_concurrency"]
+    )
+    max_in_flight = _positive_int(
+        "async_process", "max_in_flight", values["max_in_flight"]
+    )
+    if max_in_flight < max_workers:
+        raise InvalidConfigurationError(
+            "async_process_config['max_in_flight'] must be greater than or equal "
+            "to max_workers."
+        )
+
+    initializer = values.get("initializer")
+    if initializer is not None and not callable(initializer):
+        raise InvalidConfigurationError(
+            "async_process_config['initializer'] must be callable or None."
+        )
+    if initializer is not None and inspect.iscoroutinefunction(initializer):
+        raise InvalidConfigurationError(
+            "async_process_config['initializer'] must be synchronous."
+        )
+    initargs = values.get("initargs", ())
+    if not isinstance(initargs, tuple):
+        raise InvalidConfigurationError(
+            "async_process_config['initargs'] must be a tuple."
+        )
+
+    loop_initializer = values.get("loop_initializer")
+    if loop_initializer is not None and not callable(loop_initializer):
+        raise InvalidConfigurationError(
+            "async_process_config['loop_initializer'] must be callable or None."
+        )
+    loop_initargs = values.get("loop_initargs", ())
+    if not isinstance(loop_initargs, tuple):
+        raise InvalidConfigurationError(
+            "async_process_config['loop_initargs'] must be a tuple."
+        )
+
+    max_worker_restarts = values.get("max_worker_restarts", 3)
+    if (
+        isinstance(max_worker_restarts, bool)
+        or not isinstance(max_worker_restarts, int)
+        or max_worker_restarts < 0
+    ):
+        raise InvalidConfigurationError(
+            "async_process_config['max_worker_restarts'] must be a "
+            "non-negative integer."
+        )
+
+    return _AsyncProcessConfig(
+        max_workers=max_workers,
+        child_concurrency=child_concurrency,
+        max_in_flight=max_in_flight,
+        initializer=initializer,
+        initargs=initargs,
+        loop_initializer=loop_initializer,
+        loop_initargs=loop_initargs,
+        max_worker_restarts=max_worker_restarts,
     )
