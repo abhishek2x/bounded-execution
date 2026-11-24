@@ -12,7 +12,7 @@ from bounded_execution.exceptions import (
     WorkerProcessError,
 )
 
-__version__ = "0.1.0a4"
+__version__ = "1.0.0rc1"
 
 __all__ = [
     "AsyncExecutionEngine",

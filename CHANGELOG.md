@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.0rc1 - 2026-11-24
+
 - Add a separate async process engine with per-worker coroutine concurrency,
   bounded admission, cooperative cancellation, and worker replacement.
 - Add an async process example and document its I/O-bound use cases,

@@ -22,7 +22,8 @@ checked, and uploaded.
 | `0.1.0a1`    | First public alpha     | PyPI     |
 | `0.1.0a2`    | Alpha fixes            | PyPI     |
 | `0.1.0a4`    | Async API and process lifecycle controls | PyPI |
-| `0.1.0`      | First stable release   | PyPI     |
+| `1.0.0rc1`   | Release candidate      | PyPI     |
+| `1.0.0`      | First stable release   | PyPI     |
 
 ## Build and verify locally
 
@@ -81,9 +82,9 @@ files cannot be replaced. To publish an update, change the version first,
 update the changelog, then
 build, check, and upload the new artifacts with the same commands.
 
-After the alpha period, use `0.1.0` for the first stable release. Tag
-each release and create a GitHub release pointing to the changelog after
-its upload succeeds.
+After the release-candidate period, use `1.0.0` for the first stable
+release. Tag each release and create a GitHub release pointing to the
+changelog after its upload succeeds.
 
 ## GitHub Actions
 
